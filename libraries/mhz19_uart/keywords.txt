@@ -1,0 +1,10 @@
+MHZ19_uart	KEYWORD1
+#
+begin	KEYWORD2
+setAutoCalibration	KEYWORD2
+calibrateZero	KEYWORD2
+calibrateSpan	KEYWORD2
+getPPM	KEYWORD2
+getTemperature	KEYWORD2
+getStatus	KEYWORD2
+isWarming	KEYWORD2
