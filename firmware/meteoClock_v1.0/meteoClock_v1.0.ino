@@ -25,7 +25,7 @@
 #define LED_BRIGHT 255    // яркость светодиода СО2 (0 - 255)
 #define DISP_MODE 1       // в правом верхнем углу отображать: 0 - год, 1 - день недели, 2 - секунды
 #define WEEK_LANG 1       // язык дня недели: 0 - английский, 1 - русский (транслит)
-#define DEBUG 0           // вывод на дисплей лог инициализации датчиков при запуске
+#define DEBUG 1           // вывод на дисплей лог инициализации датчиков при запуске
 #define PRESSURE 1        // 0 - график давления, 1 - график прогноза дождя (вместо давления). Не забудь поправить пределы гроафика
 
 // пределы отображения для графиков
@@ -228,7 +228,8 @@ void drawDig(byte dig, byte x, byte y) {
       lcd.write(0);
       lcd.write(6);
       lcd.write(2);
-      lcd.setCursor(x + 2, y + 1);
+      lcd.setCursor(x + 1, y + 1);
+	  lcd.write(4);
       lcd.write(5);
       break;
     case 10:
@@ -282,13 +283,13 @@ static const char *dayNames[]  = {
 };
 #else
 static const char *dayNames[]  = {
-  "Vosk",
-  "Pone",
-  "Vtor",
-  "Sred",
-  "Chet",
-  "Pyat",
-  "Subb",
+  "BOCK",
+  "POND",
+  "BTOP",
+  "CPED",
+  "4ETB",
+  "5YAT",
+  "CYBB",
 };
 #endif
 
