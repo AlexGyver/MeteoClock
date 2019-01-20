@@ -50,6 +50,7 @@
 - MH-Z19 http://ali.ski/sBt2yZ  http://ali.ski/H88vfk
 - Дисплей 2004 i2c http://ali.ski/po8xV  http://ali.ski/gldFua
 - DS3231 http://ali.ski/6d7v7  http://ali.ski/cIpCv
+- Микро DS3231 http://ali.ski/HmiPE  (http://ali.ski/O_RIyj БЕЗ ИОНИСТОРА)
 
 Дополнительно:
 - Светодиод RGB (пачка) http://ali.ski/Jw5dW
