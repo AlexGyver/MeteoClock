@@ -59,6 +59,7 @@
 - Резисторы (220 R) http://ali.ski/c2_Ju
 - Проводочки http://ali.ski/aQpyr  http://ali.ski/NcIJqb
 - Корпус http://ali.ski/XxmknP
+- Корпус (Чип и Дип) https://www.chipdip.ru/product/g909g
 - Микро USB модуль http://ali.ski/LEOka
 
 ## Вам скорее всего пригодится
