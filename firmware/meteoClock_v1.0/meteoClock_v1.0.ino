@@ -1,7 +1,7 @@
 /*
   Скетч к проекту "Домашняя метеостанция"
-  Страница проекта (схемы, описания):
-  Исходники на GitHub:
+  Страница проекта (схемы, описания): https://alexgyver.ru/meteoclock/
+  Исходники на GitHub: 
   Нравится, как написан и закомментирован код? Поддержи автора! https://alexgyver.ru/support_alex/
   Автор: AlexGyver Technologies, 2018
   http://AlexGyver.ru/
@@ -10,22 +10,31 @@
 /*
   Время и дата устанавливаются атвоматически при загрузке прошивки (такие как на компьютере)
   График всех величин за час и за сутки (усреднённые за каждый час)
+  В модуле реального времени стоит батарейка, которая продолжает отсчёт времени после выключения/сброса питания
+  Как настроить время на часах. У нас есть возможность автоматически установить время на время загрузки прошивки, поэтому:
+	- Ставим настройку RESET_CLOCK на 1
+  - Прошиваемся
+  - Сразу ставим RESET_CLOCK 0
+  - И прошиваемся ещё раз
+  - Всё
 */
 
-#define SENS_TIME 60000   // время обновления показаний сенсоров на экране
+#define RESET_CLOCK 0     // сброс часов на время загрузки прошивки (для модуля с несъёмной батарейкой). Не забудь поставить 0 и прошить ещё раз!
+#define SENS_TIME 30000   // время обновления показаний сенсоров на экране, миллисекунд
 #define LED_MODE 0        // тип RGB светодиода: 0 - главный катод, 1 - главный анод
 #define LED_BRIGHT 255    // яркость светодиода СО2 (0 - 255)
 #define DISP_MODE 1       // в правом верхнем углу отображать: 0 - год, 1 - день недели, 2 - секунды
 #define WEEK_LANG 1       // язык дня недели: 0 - английский, 1 - русский (транслит)
 #define DEBUG 0           // вывод на дисплей лог инициализации датчиков при запуске
+#define PRESSURE 1        // 0 - график давления, 1 - график прогноза дождя (вместо давления). Не забудь поправить пределы гроафика
 
 // пределы отображения для графиков
 #define TEMP_MIN 15
 #define TEMP_MAX 35
 #define HUM_MIN 0
 #define HUM_MAX 100
-#define PRESS_MIN 710
-#define PRESS_MAX 790
+#define PRESS_MIN -100
+#define PRESS_MAX 100
 #define CO2_MIN 300
 #define CO2_MAX 2000
 
@@ -95,7 +104,7 @@ float dispTemp;
 byte dispHum;
 int dispPres;
 int dispCO2;
-byte dispRain;
+int dispRain;
 
 // массивы графиков
 int tempHour[15], tempDay[15];
@@ -472,7 +481,8 @@ void setup() {
                   Adafruit_BME280::SAMPLING_X1, // humidity
                   Adafruit_BME280::FILTER_OFF   );
 
-  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+  if (RESET_CLOCK || rtc.lostPower())
+    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 
   now = rtc.now();
   secs = now.second();

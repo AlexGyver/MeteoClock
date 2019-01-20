@@ -83,9 +83,11 @@ void sensorsTick() {
       co2Hour[i] = co2Hour[i + 1];
     }
     tempHour[14] = dispTemp;
-    humHour[14] = dispHum;
-    pressHour[14] = dispPres;
+    humHour[14] = dispHum;    
     co2Hour[14] = dispCO2;
+    
+    if (PRESSURE) pressHour[14] = dispRain;
+    else pressHour[14] = dispPres;
   }
 
   // 1.5 часовой таймер
@@ -145,7 +147,8 @@ void sensorsTick() {
     a = a - (long)sumX * sumY;
     a = (float)a / (6 * sumX2 - sumX * sumX);
     delta = a * 6;      // расчёт изменения давления
-    dispRain = map(delta, -250, 250, -100, 100);  // пересчитать в угол поворота сервы
+    dispRain = map(delta, -250, 250, -100, 100);  // пересчитать в проценты
+    //Serial.println(String(pressure_array[5]) + " " + String(delta) + " " + String(dispRain));   // дебаг
   }
 }
 
