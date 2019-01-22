@@ -1,7 +1,7 @@
 /*
   Скетч к проекту "Домашняя метеостанция"
   Страница проекта (схемы, описания): https://alexgyver.ru/meteoclock/
-  Исходники на GitHub:
+  Исходники на GitHub: https://github.com/AlexGyver/MeteoClock
   Нравится, как написан и закомментирован код? Поддержи автора! https://alexgyver.ru/support_alex/
   Автор: AlexGyver Technologies, 2018
   http://AlexGyver.ru/
