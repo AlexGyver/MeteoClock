@@ -513,14 +513,14 @@ void setup() {
 }
 
 void loop() {
-  if (sensorsTimer.isReady()) readSensors();
-  if (clockTimer.isReady()) clockTick();
-  plotSensorsTick();
-  modesTick();
+  if (sensorsTimer.isReady()) readSensors();		// читаем показания датчиков с периодом SENS_TIME
+  if (clockTimer.isReady()) clockTick();			// два раза в секунду пересчитываем время и мигаем точками
+  plotSensorsTick();								// тут внутри несколько таймеров для пересчёта графиков (за час, за день и прогноз)
+  modesTick();										// тут ловим нажатия на кнопку и переключаем режимы
 
-  if (mode == 0) {
-    if (drawSensorsTimer.isReady()) drawSensors();
-  } else {
-    if (plotTimer.isReady()) redrawPlot();
+  if (mode == 0) {									// в режиме "главного экрана"
+    if (drawSensorsTimer.isReady()) drawSensors();	// обновляем показания датчиков на дисплее с периодом SENS_TIME
+  } else {											// в любом из графиков
+    if (plotTimer.isReady()) redrawPlot();			// перерисовываем график
   }
 }
