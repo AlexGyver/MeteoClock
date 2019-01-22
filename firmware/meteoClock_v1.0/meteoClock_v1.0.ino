@@ -1,7 +1,7 @@
 /*
   Скетч к проекту "Домашняя метеостанция"
   Страница проекта (схемы, описания): https://alexgyver.ru/meteoclock/
-  Исходники на GitHub: 
+  Исходники на GitHub:
   Нравится, как написан и закомментирован код? Поддержи автора! https://alexgyver.ru/support_alex/
   Автор: AlexGyver Technologies, 2018
   http://AlexGyver.ru/
@@ -23,9 +23,10 @@
 #define SENS_TIME 30000   // время обновления показаний сенсоров на экране, миллисекунд
 #define LED_MODE 0        // тип RGB светодиода: 0 - главный катод, 1 - главный анод
 #define LED_BRIGHT 255    // яркость светодиода СО2 (0 - 255)
+#define BLUE_YELLOW 1     // жёлтый цвет вместо синего (1 да, 0 нет) но из за особенностей подключения жёлтый не такой яркий
 #define DISP_MODE 1       // в правом верхнем углу отображать: 0 - год, 1 - день недели, 2 - секунды
 #define WEEK_LANG 1       // язык дня недели: 0 - английский, 1 - русский (транслит)
-#define DEBUG 1           // вывод на дисплей лог инициализации датчиков при запуске
+#define DEBUG 0           // вывод на дисплей лог инициализации датчиков при запуске
 #define PRESSURE 1        // 0 - график давления, 1 - график прогноза дождя (вместо давления). Не забудь поправить пределы гроафика
 
 // пределы отображения для графиков
@@ -76,6 +77,7 @@ MHZ19_uart mhz19;
 
 #include <GyverTimer.h>
 GTimer_ms sensorsTimer(SENS_TIME);
+GTimer_ms drawSensorsTimer(SENS_TIME);
 GTimer_ms clockTimer(500);
 GTimer_ms hourPlotTimer((long)4 * 60 * 1000);         // 4 минуты
 GTimer_ms dayPlotTimer((long)1.6 * 60 * 60 * 1000);   // 1.6 часа
@@ -229,7 +231,7 @@ void drawDig(byte dig, byte x, byte y) {
       lcd.write(6);
       lcd.write(2);
       lcd.setCursor(x + 1, y + 1);
-	  lcd.write(4);
+      lcd.write(4);
       lcd.write(5);
       break;
     case 10:
@@ -383,6 +385,7 @@ void loadPlot() {
 #endif
 
 void setLED(byte color) {
+  // сначала всё выключаем
   if (!LED_MODE) {
     analogWrite(LED_R, 0);
     analogWrite(LED_G, 0);
@@ -392,14 +395,19 @@ void setLED(byte color) {
     analogWrite(LED_G, 255);
     analogWrite(LED_B, 255);
   }
-  switch (color) {    // 0 выкл, 1 красный, 2 зелёный, 3 синий
+  switch (color) {    // 0 выкл, 1 красный, 2 зелёный, 3 синий (или жёлтый)
     case 0:
       break;
     case 1: analogWrite(LED_R, LED_ON);
       break;
     case 2: analogWrite(LED_G, LED_ON);
       break;
-    case 3: analogWrite(LED_B, LED_ON);
+    case 3:
+      if (!BLUE_YELLOW) analogWrite(LED_B, LED_ON);
+      else {
+        analogWrite(LED_R, LED_ON - 50);    // чутка уменьшаем красный
+        analogWrite(LED_G, LED_ON);
+      }
       break;
   }
 }
@@ -489,10 +497,6 @@ void setup() {
   secs = now.second();
   mins = now.minute();
   hrs = now.hour();
-  loadClock();
-  drawClock(hrs, mins, 0, 0, 1);
-  drawData();
-  drawSensors();
 
   bme.takeForcedMeasurement();
   uint32_t Pressure = bme.readPressure();
@@ -500,15 +504,23 @@ void setup() {
     pressure_array[i] = Pressure;  // забить весь массив текущим давлением
     time_array[i] = i;             // забить массив времени числами 0 - 5
   }
+
+  loadClock();
+  drawClock(hrs, mins, 0, 0, 1);
+  drawData();
+  readSensors();
+  drawSensors();
 }
 
 void loop() {
+  if (sensorsTimer.isReady()) readSensors();
+  if (clockTimer.isReady()) clockTick();
+  plotSensorsTick();
+  modesTick();
+
   if (mode == 0) {
-    if (sensorsTimer.isReady()) drawSensors();
+    if (drawSensorsTimer.isReady()) drawSensors();
   } else {
     if (plotTimer.isReady()) redrawPlot();
   }
-  clockTick();
-  sensorsTick();
-  modesTick();
 }

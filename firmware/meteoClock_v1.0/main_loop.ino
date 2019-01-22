@@ -48,13 +48,19 @@ void redrawPlot() {
   }
 }
 
-void drawSensors() {
+void readSensors() {
   bme.takeForcedMeasurement();
   dispTemp = bme.readTemperature();
   dispHum = bme.readHumidity();
   dispPres = (float)bme.readPressure() * 0.00750062;
   dispCO2 = mhz19.getPPM();
 
+  if (dispCO2 < 800) setLED(2);
+  else if (dispCO2 < 1200) setLED(3);
+  else if (dispCO2 >= 1200) setLED(1);
+}
+
+void drawSensors() {
   lcd.setCursor(0, 2);
   lcd.print(String(dispTemp, 1));
   lcd.write(223);
@@ -67,13 +73,9 @@ void drawSensors() {
   lcd.print(F("       "));
   lcd.setCursor(13, 3);
   lcd.print(String(dispRain) + "%");
-
-  if (dispCO2 < 800) setLED(2);
-  else if (dispCO2 < 1200) setLED(3);
-  else if (dispCO2 >= 1200) setLED(1);
 }
 
-void sensorsTick() {
+void plotSensorsTick() {
   // 4 минутный таймер
   if (hourPlotTimer.isReady()) {
     for (byte i = 0; i < 14; i++) {
@@ -83,9 +85,9 @@ void sensorsTick() {
       co2Hour[i] = co2Hour[i + 1];
     }
     tempHour[14] = dispTemp;
-    humHour[14] = dispHum;    
+    humHour[14] = dispHum;
     co2Hour[14] = dispCO2;
-    
+
     if (PRESSURE) pressHour[14] = dispRain;
     else pressHour[14] = dispPres;
   }
@@ -154,36 +156,34 @@ void sensorsTick() {
 
 boolean dotFlag;
 void clockTick() {
-  if (clockTimer.isReady()) {
-    dotFlag = !dotFlag;
-    if (dotFlag) {          // каждую секунду пересчёт времени
-      secs++;
-      if (secs > 59) {      // каждую минуту
-        secs = 0;
-        mins++;
-        if (mins <= 59 && mode == 0) drawClock(hrs, mins, 0, 0, 1);
-      }
-      if (mins > 59) {      // каждый час
-        now = rtc.now();
-        secs = now.second();
-        mins = now.minute();
-        hrs = now.hour();
-        if (mode == 0) drawClock(hrs, mins, 0, 0, 1);
-        if (hrs > 23) {
-          hrs = 0;
-        }
-        if (mode == 0) drawData();
-      }
-      if (DISP_MODE == 2 && mode == 0) {
-        lcd.setCursor(16, 1);
-        if (secs < 10) lcd.print(" ");
-        lcd.print(secs);
-      }
+  dotFlag = !dotFlag;
+  if (dotFlag) {          // каждую секунду пересчёт времени
+    secs++;
+    if (secs > 59) {      // каждую минуту
+      secs = 0;
+      mins++;
+      if (mins <= 59 && mode == 0) drawClock(hrs, mins, 0, 0, 1);
     }
-    if (mode == 0) drawdots(7, 0, dotFlag);
-    if (dispCO2 >= 1200) {
-      if (dotFlag) setLED(1);
-      else setLED(0);
+    if (mins > 59) {      // каждый час
+      now = rtc.now();
+      secs = now.second();
+      mins = now.minute();
+      hrs = now.hour();
+      if (mode == 0) drawClock(hrs, mins, 0, 0, 1);
+      if (hrs > 23) {
+        hrs = 0;
+      }
+      if (mode == 0) drawData();
     }
+    if (DISP_MODE == 2 && mode == 0) {
+      lcd.setCursor(16, 1);
+      if (secs < 10) lcd.print(" ");
+      lcd.print(secs);
+    }
+  }
+  if (mode == 0) drawdots(7, 0, dotFlag);
+  if (dispCO2 >= 1200) {
+    if (dotFlag) setLED(1);
+    else setLED(0);
   }
 }
