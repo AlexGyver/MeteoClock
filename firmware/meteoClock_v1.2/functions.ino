@@ -21,7 +21,7 @@ void modesTick() {
       lcd.clear();
       loadClock();
       drawClock(hrs, mins, 0, 0, 1);
-      drawData();
+      if (DISPLAY_TYPE == 1) drawData();
       drawSensors();
     } else {
       lcd.clear();
@@ -101,8 +101,7 @@ void drawSensors() {
 #endif
 
   lcd.setCursor(0, 1);
-  lcd.print(String(dispPres) + " mm rain ");
-  lcd.setCursor(7, 1);
+  lcd.print(String(dispPres) + " mm  rain ");
   lcd.print(String(dispRain) + "% ");
 #endif
 }
@@ -205,7 +204,7 @@ void clockTick() {
       if (hrs > 23) {
         hrs = 0;
       }
-      if (mode == 0) drawData();
+      if (mode == 0 && DISPLAY_TYPE) drawData();
     }
     if (DISP_MODE == 2 && mode == 0) {
       lcd.setCursor(16, 1);

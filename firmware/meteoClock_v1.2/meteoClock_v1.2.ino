@@ -19,11 +19,9 @@
   - Всё
 */
 
-/* Версия 1.1
-  - Добавлена поддержка дисплея 1602
-    - Упрощённый вариант: без часов и графиков, только данные с датчиков
-  - Добавлена возможность отключить датчик CO2 и вывод его показаний
-  - Отдельно вынесена настройка адреса дисплея
+/* Версия 1.2
+  - Исправлены ошибки и баги с дисплеем 1602
+  - Дебаг продублирован в СОМ порт
 */
 
 // ------------------------- НАСТРОЙКИ --------------------
@@ -34,7 +32,7 @@
 #define BLUE_YELLOW 1     // жёлтый цвет вместо синего (1 да, 0 нет) но из за особенностей подключения жёлтый не такой яркий
 #define DISP_MODE 1       // в правом верхнем углу отображать: 0 - год, 1 - день недели, 2 - секунды
 #define WEEK_LANG 1       // язык дня недели: 0 - английский, 1 - русский (транслит)
-#define DEBUG 0           // вывод на дисплей лог инициализации датчиков при запуске
+#define DEBUG 0           // вывод на дисплей лог инициализации датчиков при запуске. Для дисплея 1602 не работает! Но дублируется через порт!
 #define PRESSURE 1        // 0 - график давления, 1 - график прогноза дождя (вместо давления). Не забудь поправить пределы гроафика
 #define CO2_SENSOR 1      // включить или выключить поддержку/вывод с датчика СО2 (1 вкл, 0 выкл)
 #define DISPLAY_TYPE 1    // тип дисплея: 1 - 2004 (большой), 0 - 1602 (маленький)
@@ -443,7 +441,7 @@ void setup() {
   lcd.backlight();
   lcd.clear();
 
-#if (DEBUG == 1)
+#if (DEBUG == 1 && DISPLAY_TYPE == 1)
   boolean status = true;
 
   setLED(1);
@@ -451,14 +449,17 @@ void setup() {
 #if (CO2_SENSOR == 1)
   lcd.setCursor(0, 0);
   lcd.print(F("MHZ-19... "));
+  Serial.print(F("MHZ-19... "));
   mhz19.begin(MHZ_TX, MHZ_RX);
   mhz19.setAutoCalibration(false);
   mhz19.getStatus();    // первый запрос, в любом случае возвращает -1
   delay(500);
   if (mhz19.getStatus() == 0) {
     lcd.print(F("OK"));
+    Serial.println(F("OK"));
   } else {
     lcd.print(F("ERROR"));
+    Serial.println(F("ERROR"));
     status = false;
   }
 #endif
@@ -466,22 +467,28 @@ void setup() {
   setLED(2);
   lcd.setCursor(0, 1);
   lcd.print(F("RTC... "));
+  Serial.print(F("RTC... "));
   delay(50);
   if (rtc.begin()) {
     lcd.print(F("OK"));
+    Serial.println(F("OK"));
   } else {
     lcd.print(F("ERROR"));
+    Serial.println(F("ERROR"));
     status = false;
   }
 
   setLED(3);
   lcd.setCursor(0, 2);
   lcd.print(F("BME280... "));
+  Serial.print(F("BME280... "));
   delay(50);
   if (bme.begin(&Wire)) {
     lcd.print(F("OK"));
+    Serial.println(F("OK"));
   } else {
     lcd.print(F("ERROR"));
+    Serial.println(F("ERROR"));
     status = false;
   }
 
@@ -489,14 +496,17 @@ void setup() {
   lcd.setCursor(0, 3);
   if (status) {
     lcd.print(F("All good"));
+    Serial.println(F("All good"));
     delay(1000);
     lcd.clear();
   } else {
     lcd.print(F("Check wires!"));
+    Serial.println(F("Check wires!"));
     delay(1000);
     while (1);
   }
 #else
+
 #if (CO2_SENSOR == 1)
   mhz19.begin(MHZ_TX, MHZ_RX);
   mhz19.setAutoCalibration(false);
@@ -526,9 +536,11 @@ void setup() {
     time_array[i] = i;             // забить массив времени числами 0 - 5
   }
 
-  loadClock();
-  drawClock(hrs, mins, 0, 0, 1);
-  drawData();
+  if (DISPLAY_TYPE == 1) {
+    loadClock();
+    drawClock(hrs, mins, 0, 0, 1);
+    drawData();
+  }
   readSensors();
   drawSensors();
 }
