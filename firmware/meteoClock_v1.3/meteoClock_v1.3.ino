@@ -36,6 +36,8 @@
 #define CO2_SENSOR 1      // включить или выключить поддержку/вывод с датчика СО2 (1 вкл, 0 выкл)
 #define DISPLAY_TYPE 1    // тип дисплея: 1 - 2004 (большой), 0 - 1602 (маленький)
 #define DISPLAY_ADDR 0x27 // адрес платы дисплея: 0x27 или 0x3f. Если дисплей не работает - смени адрес! На самом дисплее адрес не указан
+#define RISE_HOUR 7       // час включения подсветки дисплея
+#define HOUR_TO_SLEEP 22  // час выключения подсветки дисплея
 
 // пределы отображения для графиков
 #define TEMP_MIN 15
@@ -131,6 +133,8 @@ uint32_t pressure_array[6];
 uint32_t sumX, sumY, sumX2, sumXY;
 float a, b;
 byte time_array[6];
+
+boolean bl = false;
 
 // символы
 // график
@@ -425,6 +429,17 @@ void setLED(byte color) {
   }
 }
 
+void checkBacklights() {
+  if(hrs >= RISE_HOUR && hrs < HOUR_TO_SLEEP && !bl){
+      lcd.backlight();
+      bl = true; 
+  }
+  else if((hrs < RISE_HOUR || hrs >= HOUR_TO_SLEEP) && bl) {
+    lcd.noBacklight();
+    bl = false;
+  }
+}
+
 void setup() {
   Serial.begin(9600);
 
@@ -545,8 +560,10 @@ void setup() {
 }
 
 void loop() {
-  if (sensorsTimer.isReady()) readSensors();    // читаем показания датчиков с периодом SENS_TIME
-
+  if (sensorsTimer.isReady()) {
+    readSensors();    // читаем показания датчиков с периодом SENS_TIME
+    checkBacklights();
+}
 #if (DISPLAY_TYPE == 1)
   if (clockTimer.isReady()) clockTick();        // два раза в секунду пересчитываем время и мигаем точками
   plotSensorsTick();                            // тут внутри несколько таймеров для пересчёта графиков (за час, за день и прогноз)
