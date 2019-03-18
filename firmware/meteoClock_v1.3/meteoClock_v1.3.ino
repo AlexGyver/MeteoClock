@@ -51,7 +51,7 @@
 // стоковый адрес был 0x77, у китайского модуля адрес 0x76.
 // Так что если юзаете не библиотеку из архива - не забудьте поменять
 
-// если дисплей не заводится - поменяйте адрес (строка 54)
+// если дисплей не заводится - поменяйте адрес (строка 54) и не забудьте отрегулировать яркость символов подстроечным резистором на модуле I2C дисплея
 
 // пины
 #define MHZ_RX 2
@@ -418,7 +418,12 @@ void setLED(byte color) {
     case 3:
       if (!BLUE_YELLOW) analogWrite(LED_B, LED_ON);
       else {
-        analogWrite(LED_R, LED_ON - 50);    // чутка уменьшаем красный
+        // чутка уменьшаем красный в зависимости от типа светодиода, берем 15% от яркости LED_BRIGHT
+        if (!LED_MODE) {
+          analogWrite(LED_R, constrain( LED_ON - map(15, 0, 100, 0, LED_BRIGHT), 0, LED_BRIGHT));
+        } else {
+          analogWrite(LED_R, constrain( LED_ON + map(15, 0, 100, 0, LED_BRIGHT), 0, LED_BRIGHT));
+        }
         analogWrite(LED_G, LED_ON);
       }
       break;
