@@ -47,6 +47,7 @@
 #define CO2_SENSOR 1        // включить или выключить поддержку/вывод с датчика СО2 (1 вкл, 0 выкл)
 #define DISPLAY_TYPE 1      // тип дисплея: 1 - 2004 (большой), 0 - 1602 (маленький)
 #define DISPLAY_ADDR 0x27   // адрес платы дисплея: 0x27 или 0x3f. Если дисплей не работает - смени адрес! На самом дисплее адрес не указан
+#define BME_ADDR 0x76       // адрем платы BME280: 0x76 или 0x77. Стоковый адрес 0x77, у китайского модуля адрес 0x76.
 
 // пределы отображения для графиков
 #define TEMP_MIN 15
@@ -57,12 +58,6 @@
 #define PRESS_MAX 100
 #define CO2_MIN 300
 #define CO2_MAX 2000
-
-// адрес BME280 жёстко задан в файле библиотеки Adafruit_BME280.h
-// стоковый адрес был 0x77, у китайского модуля адрес 0x76.
-// Так что если юзаете НЕ библиотеку из архива - не забудьте поменять
-
-// если дисплей не заводится - поменяйте адрес (строка 54)
 
 // пины
 #define BACKLIGHT 10
@@ -503,7 +498,7 @@ void setup() {
   lcd.print(F("BME280... "));
   Serial.print(F("BME280... "));
   delay(50);
-  if (bme.begin(&Wire)) {
+  if (bme.begin(BME_ADDR)) {
     lcd.print(F("OK"));
     Serial.println(F("OK"));
   } else {
@@ -536,7 +531,7 @@ void setup() {
   mhz19.setAutoCalibration(false);
 #endif
   rtc.begin();
-  bme.begin(&Wire);
+  bme.begin(BME_ADDR);
 #endif
 
   bme.setSampling(Adafruit_BME280::MODE_FORCED,
