@@ -1,9 +1,35 @@
+void checkBrightness() {
+  if (analogRead(PHOTO) < BRIGHT_THRESHOLD) {   // если темно
+    analogWrite(BACKLIGHT, LCD_BRIGHT_MIN);
+#if (LED_MODE == 0)
+    LED_ON = (LED_BRIGHT_MIN);
+#else
+    LED_ON = (255 - LED_BRIGHT_MIN);
+#endif
+  } else {                                      // если светло
+    analogWrite(BACKLIGHT, LCD_BRIGHT_MAX);
+#if (LED_MODE == 0)
+    LED_ON = (LED_BRIGHT_MAX);
+#else
+    LED_ON = (255 - LED_BRIGHT_MAX);
+#endif
+  }
+  if (dispCO2 < 800) setLED(2);
+  else if (dispCO2 < 1200) setLED(3);
+  else if (dispCO2 >= 1200) setLED(1);
+}
+
 void modesTick() {
   button.tick();
   boolean changeFlag = false;
   if (button.isClick()) {
     mode++;
+
+#if (CO2_SENSOR == 1)
     if (mode > 8) mode = 0;
+#else
+    if (mode > 6) mode = 0;
+#endif
     changeFlag = true;
   }
   if (button.isHolded()) {
@@ -16,7 +42,7 @@ void modesTick() {
       lcd.clear();
       loadClock();
       drawClock(hrs, mins, 0, 0, 1);
-      drawData();
+      if (DISPLAY_TYPE == 1) drawData();
       drawSensors();
     } else {
       lcd.clear();
@@ -53,26 +79,48 @@ void readSensors() {
   dispTemp = bme.readTemperature();
   dispHum = bme.readHumidity();
   dispPres = (float)bme.readPressure() * 0.00750062;
+#if (CO2_SENSOR == 1)
   dispCO2 = mhz19.getPPM();
 
   if (dispCO2 < 800) setLED(2);
   else if (dispCO2 < 1200) setLED(3);
   else if (dispCO2 >= 1200) setLED(1);
+#endif
 }
 
 void drawSensors() {
+#if (DISPLAY_TYPE == 1)
+  // дисплей 2004
   lcd.setCursor(0, 2);
   lcd.print(String(dispTemp, 1));
   lcd.write(223);
-  lcd.setCursor(6, 2);
-  lcd.print(" " + String(dispHum) + "%  " + String(dispCO2) + " ppm");
-  if (dispCO2 < 1000) lcd.print(" ");
+  lcd.setCursor(8, 2);
+  lcd.print(String(dispHum) + "%  ");
 
   lcd.setCursor(0, 3);
-  lcd.print(String(dispPres) + " mm  rain ");
-  lcd.print(F("       "));
-  lcd.setCursor(13, 3);
-  lcd.print(String(dispRain) + "%");
+  lcd.print(String(dispPres) + " mm");
+
+  #if (CO2_SENSOR == 1)
+  lcd.setCursor(8, 3);
+  lcd.print(String(dispCO2) + " ppm");
+  #endif
+
+#else
+  // дисплей 1602
+  lcd.setCursor(0, 0);
+  lcd.print(String(dispTemp, 1));
+  lcd.write(223);
+  lcd.setCursor(6, 0);
+  lcd.print(String(dispHum) + "% ");
+
+#if (CO2_SENSOR == 1)
+  lcd.print(String(dispCO2) + "ppm");
+  if (dispCO2 < 1000) lcd.print(" ");
+#endif
+
+  lcd.setCursor(0, 1);
+  lcd.print(String(dispPres) + " mm");
+#endif
 }
 
 void plotSensorsTick() {
@@ -87,9 +135,7 @@ void plotSensorsTick() {
     tempHour[14] = dispTemp;
     humHour[14] = dispHum;
     co2Hour[14] = dispCO2;
-
-    if (PRESSURE) pressHour[14] = dispRain;
-    else pressHour[14] = dispPres;
+    pressHour[14] = dispPres;
   }
 
   // 1.5 часовой таймер
@@ -118,40 +164,6 @@ void plotSensorsTick() {
     pressDay[14] = averPress;
     co2Day[14] = averCO2;
   }
-
-  // 10 минутный таймер
-  if (predictTimer.isReady()) {
-    // тут делаем линейную аппроксимацию для предсказания погоды
-    long averPress = 0;
-    for (byte i = 0; i < 10; i++) {
-      bme.takeForcedMeasurement();
-      averPress += bme.readPressure();
-      delay(1);
-    }
-    averPress /= 10;
-
-    for (byte i = 0; i < 5; i++) {                   // счётчик от 0 до 5 (да, до 5. Так как 4 меньше 5)
-      pressure_array[i] = pressure_array[i + 1];     // сдвинуть массив давлений КРОМЕ ПОСЛЕДНЕЙ ЯЧЕЙКИ на шаг назад
-    }
-    pressure_array[5] = averPress;                    // последний элемент массива теперь - новое давление
-    sumX = 0;
-    sumY = 0;
-    sumX2 = 0;
-    sumXY = 0;
-    for (int i = 0; i < 6; i++) {                    // для всех элементов массива
-      sumX += time_array[i];
-      sumY += (long)pressure_array[i];
-      sumX2 += time_array[i] * time_array[i];
-      sumXY += (long)time_array[i] * pressure_array[i];
-    }
-    a = 0;
-    a = (long)6 * sumXY;             // расчёт коэффициента наклона приямой
-    a = a - (long)sumX * sumY;
-    a = (float)a / (6 * sumX2 - sumX * sumX);
-    delta = a * 6;      // расчёт изменения давления
-    dispRain = map(delta, -250, 250, -100, 100);  // пересчитать в проценты
-    //Serial.println(String(pressure_array[5]) + " " + String(delta) + " " + String(dispRain));   // дебаг
-  }
 }
 
 boolean dotFlag;
@@ -173,7 +185,7 @@ void clockTick() {
       if (hrs > 23) {
         hrs = 0;
       }
-      if (mode == 0) drawData();
+      if (mode == 0 && DISPLAY_TYPE) drawData();
     }
     if (DISP_MODE == 2 && mode == 0) {
       lcd.setCursor(16, 1);
@@ -181,7 +193,7 @@ void clockTick() {
       lcd.print(secs);
     }
   }
-  if (mode == 0) drawdots(7, 0, dotFlag);
+  if (mode == 0) drawDots(7, 0, dotFlag);
   if (dispCO2 >= 1200) {
     if (dotFlag) setLED(1);
     else setLED(0);
