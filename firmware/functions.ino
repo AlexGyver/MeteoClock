@@ -62,9 +62,9 @@ void redrawPlot() {
 
 void readSensors() {
   bme.takeForcedMeasurement();
-  dispTemp = bme.readTemperature();
+  dispTmp = bme.readTemperature();
   dispHum = bme.readHumidity();
-  dispPres = (float)bme.readPressure() * 0.00750062;
+  dispPrs = (float)bme.readPressure() * 0.00750062;
 #if (CO2_SENSOR == 1)
   dispCO2 = mhz19.getPPM();
 
@@ -76,13 +76,14 @@ void readSensors() {
 
 void drawSensors() {
   lcd.setCursor(0, 2);
-  lcd.print(String(dispTemp, 1));
+  lcd.print(String(dispTmp, 1));
   lcd.write(223);
-  lcd.setCursor(8, 2);
+
+  lcd.setCursor(9, 2);
   lcd.print(String(dispHum) + " %");
 
   lcd.setCursor(0, 3);
-  lcd.print(String(dispPres) + " mm");
+  lcd.print(String(dispPrs) + " mm");
 
   #if (CO2_SENSOR == 1)
   lcd.setCursor(8, 3);
@@ -100,10 +101,10 @@ void plotSensorsTick() {
       co2Hour[i] = co2Hour[i + 1];
     }
 
-    tmpHour[14] = dispTemp;
+    tmpHour[14] = dispTmp;
     humHour[14] = dispHum;
     co2Hour[14] = dispCO2;
-    prsHour[14] = dispPres;
+    prsHour[14] = dispPrs;
   }
 
   // daily

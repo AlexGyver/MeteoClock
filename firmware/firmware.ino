@@ -88,9 +88,9 @@ byte mode = 0;
 */
 
 // переменные для вывода
-float dispTemp;
+float dispTmp;
 byte dispHum;
-int dispPres;
+int dispPrs;
 int dispCO2;
 
 // массивы графиков
