@@ -1,19 +1,12 @@
 void checkBrightness() {
-  if (analogRead(PHOTO) < BRIGHT_THRESHOLD) {   // если темно
+  if (analogRead(PHOTO) < BRIGHT_THRESHOLD) {   // light place
     analogWrite(BACKLIGHT, LCD_BRIGHT_MIN);
-#if (LED_MODE == 0)
-    LED_ON = (LED_BRIGHT_MIN);
-#else
-    LED_ON = (255 - LED_BRIGHT_MIN);
-#endif
-  } else {                                      // если светло
+    LED_ON = LED_MODE == 0 ? LED_BRIGHT_MIN : 255 - LED_BRIGHT_MIN;
+  } else {                                      // dark place
     analogWrite(BACKLIGHT, LCD_BRIGHT_MAX);
-#if (LED_MODE == 0)
-    LED_ON = (LED_BRIGHT_MAX);
-#else
-    LED_ON = (255 - LED_BRIGHT_MAX);
-#endif
+    LED_ON = LED_MODE == 0 ? LED_BRIGHT_MAX : 255 - LED_BRIGHT_MAX;
   }
+
   if (dispCO2 < 800) setLED(2);
   else if (dispCO2 < 1200) setLED(3);
   else if (dispCO2 >= 1200) setLED(1);
@@ -32,6 +25,7 @@ void modesTick() {
 #endif
     changeFlag = true;
   }
+
   if (button.isHolded()) {
     mode = 0;
     changeFlag = true;
@@ -42,7 +36,7 @@ void modesTick() {
       lcd.clear();
       loadClock();
       drawClock(hrs, mins, 0, 0, 1);
-      if (DISPLAY_TYPE == 1) drawData();
+      drawData();
       drawSensors();
     } else {
       lcd.clear();
@@ -55,22 +49,14 @@ void modesTick() {
 void redrawPlot() {
   lcd.clear();
   switch (mode) {
-    case 1: drawPlot(0, 3, 15, 4, TEMP_MIN, TEMP_MAX, (int*)tempHour, "t hr");
-      break;
-    case 2: drawPlot(0, 3, 15, 4, TEMP_MIN, TEMP_MAX, (int*)tempDay, "t day");
-      break;
-    case 3: drawPlot(0, 3, 15, 4, HUM_MIN, HUM_MAX, (int*)humHour, "h hr");
-      break;
-    case 4: drawPlot(0, 3, 15, 4, HUM_MIN, HUM_MAX, (int*)humDay, "h day");
-      break;
-    case 5: drawPlot(0, 3, 15, 4, PRESS_MIN, PRESS_MAX, (int*)pressHour, "p hr");
-      break;
-    case 6: drawPlot(0, 3, 15, 4, PRESS_MIN, PRESS_MAX, (int*)pressDay, "p day");
-      break;
-    case 7: drawPlot(0, 3, 15, 4, CO2_MIN, CO2_MAX, (int*)co2Hour, "c hr");
-      break;
-    case 8: drawPlot(0, 3, 15, 4, CO2_MIN, CO2_MAX, (int*)co2Day, "c day");
-      break;
+    case 1: drawPlot(0, 3, 15, 4, TEMP_MIN, TEMP_MAX, (int*)tmpHour, "t hr"); break;
+    case 2: drawPlot(0, 3, 15, 4, TEMP_MIN, TEMP_MAX, (int*)tmpDay, "t day"); break;
+    case 3: drawPlot(0, 3, 15, 4, HUM_MIN, HUM_MAX, (int*)humHour, "h hr"); break;
+    case 4: drawPlot(0, 3, 15, 4, HUM_MIN, HUM_MAX, (int*)humDay, "h day"); break;
+    case 5: drawPlot(0, 3, 15, 4, PRESS_MIN, PRESS_MAX, (int*)prsHour, "p hr"); break;
+    case 6: drawPlot(0, 3, 15, 4, PRESS_MIN, PRESS_MAX, (int*)prsDay, "p day"); break;
+    case 7: drawPlot(0, 3, 15, 4, CO2_MIN, CO2_MAX, (int*)co2Hour, "c hr"); break;
+    case 8: drawPlot(0, 3, 15, 4, CO2_MIN, CO2_MAX, (int*)co2Day, "c day"); break;
   }
 }
 
@@ -89,13 +75,11 @@ void readSensors() {
 }
 
 void drawSensors() {
-#if (DISPLAY_TYPE == 1)
-  // дисплей 2004
   lcd.setCursor(0, 2);
   lcd.print(String(dispTemp, 1));
   lcd.write(223);
   lcd.setCursor(8, 2);
-  lcd.print(String(dispHum) + "%  ");
+  lcd.print(String(dispHum) + " %");
 
   lcd.setCursor(0, 3);
   lcd.print(String(dispPres) + " mm");
@@ -104,65 +88,51 @@ void drawSensors() {
   lcd.setCursor(8, 3);
   lcd.print(String(dispCO2) + " ppm");
   #endif
-
-#else
-  // дисплей 1602
-  lcd.setCursor(0, 0);
-  lcd.print(String(dispTemp, 1));
-  lcd.write(223);
-  lcd.setCursor(6, 0);
-  lcd.print(String(dispHum) + "% ");
-
-#if (CO2_SENSOR == 1)
-  lcd.print(String(dispCO2) + "ppm");
-  if (dispCO2 < 1000) lcd.print(" ");
-#endif
-
-  lcd.setCursor(0, 1);
-  lcd.print(String(dispPres) + " mm");
-#endif
 }
 
 void plotSensorsTick() {
-  // 4 минутный таймер
+  // hourly
   if (hourPlotTimer.isReady()) {
     for (byte i = 0; i < 14; i++) {
-      tempHour[i] = tempHour[i + 1];
+      tmpHour[i] = tmpHour[i + 1];
       humHour[i] = humHour[i + 1];
-      pressHour[i] = pressHour[i + 1];
+      prsHour[i] = prsHour[i + 1];
       co2Hour[i] = co2Hour[i + 1];
     }
-    tempHour[14] = dispTemp;
+
+    tmpHour[14] = dispTemp;
     humHour[14] = dispHum;
     co2Hour[14] = dispCO2;
-    pressHour[14] = dispPres;
+    prsHour[14] = dispPres;
   }
 
-  // 1.5 часовой таймер
+  // daily
   if (dayPlotTimer.isReady()) {
-    long averTemp = 0, averHum = 0, averPress = 0, averCO2 = 0;
+    long avgTmp = 0, avgHum = 0, avgPrs = 0, avgCO2 = 0;
 
     for (byte i = 0; i < 15; i++) {
-      averTemp += tempHour[i];
-      averHum += humHour[i];
-      averPress += pressHour[i];
-      averCO2 += co2Hour[i];
+      avgTmp += tmpHour[i];
+      avgHum += humHour[i];
+      avgPrs += prsHour[i];
+      avgCO2 += co2Hour[i];
     }
-    averTemp /= 15;
-    averHum /= 15;
-    averPress /= 15;
-    averCO2 /= 15;
+
+    avgTmp /= 15;
+    avgHum /= 15;
+    avgPrs /= 15;
+    avgCO2 /= 15;
 
     for (byte i = 0; i < 14; i++) {
-      tempDay[i] = tempDay[i + 1];
+      tmpDay[i] = tmpDay[i + 1];
       humDay[i] = humDay[i + 1];
-      pressDay[i] = pressDay[i + 1];
+      prsDay[i] = prsDay[i + 1];
       co2Day[i] = co2Day[i + 1];
     }
-    tempDay[14] = averTemp;
-    humDay[14] = averHum;
-    pressDay[14] = averPress;
-    co2Day[14] = averCO2;
+
+    tmpDay[14] = avgTmp;
+    humDay[14] = avgHum;
+    prsDay[14] = avgPrs;
+    co2Day[14] = avgCO2;
   }
 }
 
@@ -185,12 +155,7 @@ void clockTick() {
       if (hrs > 23) {
         hrs = 0;
       }
-      if (mode == 0 && DISPLAY_TYPE) drawData();
-    }
-    if (DISP_MODE == 2 && mode == 0) {
-      lcd.setCursor(16, 1);
-      if (secs < 10) lcd.print(" ");
-      lcd.print(secs);
+      if (mode == 0) drawData();
     }
   }
   if (mode == 0) drawDots(7, 0, dotFlag);
