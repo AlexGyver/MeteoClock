@@ -141,8 +141,6 @@ void drawClock(byte hours, byte minutes, byte x, byte y, boolean dotState) {
   drawDig(minutes % 10, x + 12, y);
 }
 
-static const char *dayNames[] = {"SU", "MO", "TU", "WE", "TH", "FR", "SA"};
-
 void drawData() {
   lcd.setCursor(15, 0);
   if (now.day() < 10) lcd.print(0);
@@ -177,7 +175,7 @@ void drawPlot(byte pos, byte row, byte width, byte height, int min_val, int max_
     byte infill, fract;
     
     // найти количество целых блоков с учётом минимума и максимума для отображения на графике
-    infill = plot_array[i] > min_val ? floor((float)(plot_array[i] - min_val) / (max_val - min_val) * height * 10) : 0
+    infill = plot_array[i] > min_val ? floor((float)(plot_array[i] - min_val) / (max_val - min_val) * height * 10) : 0;
     fract = (float)(infill % 10) * 8 / 10;                   // найти количество оставшихся полосок
     infill = infill / 10;
 

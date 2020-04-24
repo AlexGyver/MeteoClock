@@ -139,29 +139,20 @@ void plotSensorsTick() {
 
 boolean dotFlag;
 void clockTick() {
+  now = rtc.now();
+  secs = now.second();
+  mins = now.minute();
+  hrs = now.hour();
+
   dotFlag = !dotFlag;
-  if (dotFlag) {          // каждую секунду пересчёт времени
-    secs++;
-    if (secs > 59) {      // каждую минуту
-      secs = 0;
-      mins++;
-      if (mins <= 59 && mode == 0) drawClock(hrs, mins, 0, 0, 1);
-    }
-    if (mins > 59) {      // каждый час
-      now = rtc.now();
-      secs = now.second();
-      mins = now.minute();
-      hrs = now.hour();
-      if (mode == 0) drawClock(hrs, mins, 0, 0, 1);
-      if (hrs > 23) {
-        hrs = 0;
-      }
-      if (mode == 0) drawData();
-    }
+  if (mode == 0) { 
+    drawClock(hrs, mins, 0, 0, 1);
+    drawDots(7, 0, dotFlag);
+
+    drawData();
   }
-  if (mode == 0) drawDots(7, 0, dotFlag);
+
   if (dispCO2 >= 1200) {
-    if (dotFlag) setLED(1);
-    else setLED(0);
+    setLED(dotFlag ? 1 : 0);
   }
 }

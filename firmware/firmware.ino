@@ -52,6 +52,7 @@ LiquidCrystal_I2C lcd(DISPLAY_ADDR, 20, 4);
 
 RTC_DS3231 rtc;
 DateTime now;
+int8_t secs, mins, hrs;
 
 #define SEALEVELPRESSURE_HPA (1013.25)
 Adafruit_BME280 bme;
@@ -73,7 +74,6 @@ GTimer_ms brightTimer(5000);
 
 GButton button(BTN_PIN, LOW_PULL, NORM_OPEN);
 
-int8_t hrs, mins, secs;
 byte mode = 0;
 /*
   0 часы и данные
@@ -92,6 +92,7 @@ float dispTmp;
 byte dispHum;
 int dispPrs;
 int dispCO2;
+static const char *dayNames[] = {"SU", "MO", "TU", "WE", "TH", "FR", "SA"};
 
 // массивы графиков
 int tmpHour[15], tmpDay[15];
@@ -119,6 +120,7 @@ uint8_t LB[8]  = {0b00000,  0b00000,  0b00000,  0b00000,  0b00000,  0b11111,  0b
 uint8_t LR[8]  = {0b11111,  0b11111,  0b11111,  0b11111,  0b11111,  0b11111,  0b11110,  0b11100};
 uint8_t UMB[8] = {0b11111,  0b11111,  0b11111,  0b00000,  0b00000,  0b00000,  0b11111,  0b11111};
 uint8_t LMB[8] = {0b11111,  0b00000,  0b00000,  0b00000,  0b00000,  0b11111,  0b11111,  0b11111};
+
 void loadClock() {
   lcd.createChar(0, LT);
   lcd.createChar(1, UB);
@@ -162,12 +164,9 @@ void setLED(byte color) {
   }
 
   switch (color) {    // 0 выкл, 1 красный, 2 зелёный, 3 синий (или жёлтый)
-    case 0:
-      break;
-    case 1: analogWrite(LED_R, LED_ON);
-      break;
-    case 2: analogWrite(LED_G, LED_ON);
-      break;
+    case 0: break;
+    case 1: analogWrite(LED_R, LED_ON); break;
+    case 2: analogWrite(LED_G, LED_ON); break;
     case 3:
       analogWrite(LED_R, LED_ON - 50);    // чутка уменьшаем красный
       analogWrite(LED_G, LED_ON);
@@ -196,15 +195,12 @@ void setup() {
   mhz19.begin(MHZ_TX, MHZ_RX);
   mhz19.setAutoCalibration(false);
 #endif
-  rtc.begin();
-  bme.begin(&Wire);
-#endif
 
   bme.setSampling(Adafruit_BME280::MODE_FORCED,
                   Adafruit_BME280::SAMPLING_X1, // temperature
                   Adafruit_BME280::SAMPLING_X1, // pressure
                   Adafruit_BME280::SAMPLING_X1, // humidity
-                  Adafruit_BME280::FILTER_OFF   );
+                  Adafruit_BME280::FILTER_OFF);
 
   if (RESET_CLOCK || rtc.lostPower())
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
@@ -215,21 +211,16 @@ void setup() {
   hrs = now.hour();
 
   bme.takeForcedMeasurement();
-
-    loadClock();
-    drawClock(hrs, mins, 0, 0, 1);
-    drawData();
-  readSensors();
-  drawSensors();
 }
 
 void loop() {
   if (brightTimer.isReady()) checkBrightness(); // яркость
   if (sensorsTimer.isReady()) readSensors();    // читаем показания датчиков с периодом SENS_TIME
-
   if (clockTimer.isReady()) clockTick();        // два раза в секунду пересчитываем время и мигаем точками
+  
   plotSensorsTick();                            // тут внутри несколько таймеров для пересчёта графиков (за час, за день и прогноз)
   modesTick();                                  // тут ловим нажатия на кнопку и переключаем режимы
+  
   if (mode == 0) {                                  // в режиме "главного экрана"
     if (drawSensorsTimer.isReady()) drawSensors();  // обновляем показания датчиков на дисплее с периодом SENS_TIME
   } else {                                          // в любом из графиков
