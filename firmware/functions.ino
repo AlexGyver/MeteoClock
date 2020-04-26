@@ -75,39 +75,36 @@ void updateBrightness() {
 
 void readInput() {
   button.tick();
-  boolean changeFlag = false;
 
   if (button.isClick()) {
-    display_mode++;
-    if (display_mode > 8)
-      display_mode = 0;
-    
-    changeFlag = true;
+    next_mode++;
+    if (next_mode > 8)
+      next_mode = 0;
   }
 
   if (button.isHolded()) {
-    display_mode = 0;
-    changeFlag = true;
+    next_mode = 0;
   }
 
-  if (!changeFlag)
+  if (display_mode == next_mode)
     return;
 
+  updateScreen();
+}
+
+void updateScreen() {
+  display_mode = next_mode;
+  lcd.clear();
+
   if (display_mode == 0) {
-    lcd.clear();
     loadClock();
     drawClock();
     drawData();
     drawSensors();
-  } else {
-    lcd.clear();
-    loadPlot();
-    updatePlot();
+    return;
   }
-}
 
-void updatePlot() {
-  lcd.clear();
+  loadPlot();
   switch (display_mode) {
     case 1: drawPlot(0, 3, 15, 4, TMP_MIN, TMP_MAX, TMP_STP, (int*)tmpHour, "t hr"); break;
     case 2: drawPlot(0, 3, 15, 4, TMP_MIN, TMP_MAX, TMP_STP, (int*)tmpDay, "t day"); break;
@@ -136,20 +133,20 @@ void readSensors() {
 
 void drawSensors() {
   // Temperature
-  lcd.setCursor(0, 2);
+  lcd.setCursor(2, 2);
   lcd.print(String(current_tmp, 1));
   lcd.write(223);
 
   // Humidity
-  lcd.setCursor(9, 2);
+  lcd.setCursor(12, 2);
   lcd.print(String(current_hum) + " %");
 
   // Pressure
-  lcd.setCursor(0, 3);
+  lcd.setCursor(2, 3);
   lcd.print(String(current_prs) + " mm");
 
   // CO2
-  lcd.setCursor(8, 3);
+  lcd.setCursor(11, 3);
   lcd.print(String(current_co2) + " ppm");
 }
 

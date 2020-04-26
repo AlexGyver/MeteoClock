@@ -66,11 +66,10 @@ MHZ19_uart mhz19;
 
 // Init timers and callbacks
 GTimer_ms sensorsTimer(SENS_TIME);
-GTimer_ms drawSensorsTimer(SENS_TIME);
+GTimer_ms drawTimer(30000);
 GTimer_ms clockTimer(5000);
 GTimer_ms hourPlotTimer((long)4 * 60 * 1000);
 GTimer_ms dayPlotTimer((long)1.6 * 60 * 60 * 1000);
-GTimer_ms plotTimer(240000);
 GTimer_ms brightTimer(5000);
 
 // Init single button
@@ -88,6 +87,7 @@ GButton button(BTN_PIN, LOW_PULL, NORM_OPEN);
   8 CO2 plot (day)
 */
 byte display_mode = 0;
+byte next_mode = 0;
 
 float current_tmp;
 byte current_hum;
@@ -114,7 +114,7 @@ void readSensors();
 void updateAvgSensorsData();
 void readInput();
 void drawSensors();
-void updatePlot();
+void updateScreen();
 
 void setup() {
   Serial.begin(9600);
@@ -161,7 +161,8 @@ void setup() {
   }
   updateTime();
   Serial.println(F("Real time init - Done"));
-  
+
+  updateScreen(); // Force first draw
   Serial.println(F("All set - Done"));
 }
 
@@ -178,11 +179,6 @@ void loop() {
   updateAvgSensorsData();
   readInput();
   
-  if (display_mode == 0) { // Home
-    if (drawSensorsTimer.isReady())
-      drawSensors();
-  } else { // Plot
-    if (plotTimer.isReady())
-      updatePlot();
-  }
+  if (drawTimer.isReady())
+    updateScreen();
 }
