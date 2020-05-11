@@ -12,6 +12,8 @@ I have made several changes to original code while exploring this solution.
 
 ![version - 1](/pics/v1-min.jpg)
 
+![version - 2](/pics/v2-min.jpg)
+
 # TO DO
 
 * Specify measurement step and time step instead of const 15.
