@@ -7,46 +7,27 @@
   http://AlexGyver.ru/
 */
 
-/*
-  Время и дата устанавливаются атвоматически при загрузке прошивки (такие как на компьютере)
-  График всех величин за час и за сутки (усреднённые за каждый час)
-  В модуле реального времени стоит батарейка, которая продолжает отсчёт времени после выключения/сброса питания
-  Как настроить время на часах. У нас есть возможность автоматически установить время на время загрузки прошивки, поэтому:
-	- Ставим настройку RESET_CLOCK на 1
-  - Прошиваемся
-  - Сразу ставим RESET_CLOCK 0
-  - И прошиваемся ещё раз
-  - Всё
-*/
-
-/* Версия 1.5
-  - Добавлено управление яркостью
-  - Яркость дисплея и светодиода СО2 меняется на максимальную и минимальную в зависимости от сигнала с фоторезистора
-  Подключите датчик (фоторезистор) по схеме. Теперь на экране отладки справа на второй строчке появится величина сигнала
-  с фоторезистора.
-*/
 
 // ------------------------- НАСТРОЙКИ --------------------
-#define RESET_CLOCK 0       // сброс часов на время загрузки прошивки (для модуля с несъёмной батарейкой). Не забудь поставить 0 и прошить ещё раз!
 #define SENS_TIME 30000     // время обновления показаний сенсоров на экране, миллисекунд
 #define LED_MODE 0          // тип RGB светодиода: 0 - главный катод, 1 - главный анод
 
 // управление яркостью
-#define BRIGHT_CONTROL 1      // 0/1 - запретить/разрешить управление яркостью (при отключении яркость всегда будет макс.)
-#define BRIGHT_THRESHOLD 150  // величина сигнала, ниже которой яркость переключится на минимум (0-1023)
-#define LED_BRIGHT_MAX 255    // макс яркость светодиода СО2 (0 - 255)
-#define LED_BRIGHT_MIN 10     // мин яркость светодиода СО2 (0 - 255)
-#define LCD_BRIGHT_MAX 255    // макс яркость подсветки дисплея (0 - 255)
-#define LCD_BRIGHT_MIN 10     // мин яркость подсветки дисплея (0 - 255)
 
-#define BLUE_YELLOW 1       // жёлтый цвет вместо синего (1 да, 0 нет) но из за особенностей подключения жёлтый не такой яркий
-#define DISP_MODE 1         // в правом верхнем углу отображать: 0 - год, 1 - день недели, 2 - секунды
-#define WEEK_LANG 1         // язык дня недели: 0 - английский, 1 - русский (транслит)
-#define DEBUG 0             // вывод на дисплей лог инициализации датчиков при запуске. Для дисплея 1602 не работает! Но дублируется через порт!
+#define LED_BRIGHT_MAX 100    // макс яркость светодиода СО2 (0 - 255)
+#define LED_BRIGHT_MIN 5     // мин яркость светодиода СО2 (0 - 255)
+#define LCD_BRIGHT_MAX 255    // макс яркость подсветки дисплея (0 - 255)
+#define LCD_BRIGHT_MIN 255     // мин яркость подсветки дисплея (0 - 255)
+
+#define BLUE_YELLOW 0       // жёлтый цвет вместо синего (1 да, 0 нет) но из за особенностей подключения жёлтый не такой яркий
+#define DISP_MODE 0         // в правом верхнем углу отображать: 0 - год, 1 - день недели, 2 - секунды
+#define WEEK_LANG 0         // язык дня недели: 0 - английский, 1 - русский (транслит)
+#define DEBUG 1             // вывод на дисплей лог инициализации датчиков при запуске. Для дисплея 1602 не работает! Но дублируется через порт!
 #define PRESSURE 1          // 0 - график давления, 1 - график прогноза дождя (вместо давления). Не забудь поправить пределы гроафика
 #define CO2_SENSOR 1        // включить или выключить поддержку/вывод с датчика СО2 (1 вкл, 0 выкл)
 #define DISPLAY_TYPE 1      // тип дисплея: 1 - 2004 (большой), 0 - 1602 (маленький)
 #define DISPLAY_ADDR 0x27   // адрес платы дисплея: 0x27 или 0x3f. Если дисплей не работает - смени адрес! На самом дисплее адрес не указан
+#define BME_ADDR 0x76       // адрем платы BME280: 0x76 или 0x77. Стоковый адрес 0x77, у китайского модуля адрес 0x76.
 
 // пределы отображения для графиков
 #define TEMP_MIN 15
@@ -58,31 +39,27 @@
 #define CO2_MIN 300
 #define CO2_MAX 2000
 
-// адрес BME280 жёстко задан в файле библиотеки Adafruit_BME280.h
-// стоковый адрес был 0x77, у китайского модуля адрес 0x76.
-// Так что если юзаете НЕ библиотеку из архива - не забудьте поменять
-
-// если дисплей не заводится - поменяйте адрес (строка 54)
-
 // пины
-#define BACKLIGHT 10
-#define PHOTO A3
+#define BACKLIGHT A0
 
-#define MHZ_RX 2
-#define MHZ_TX 3
+#define MHZ_RX D5
+#define MHZ_TX D6
 
-#define LED_COM 7
-#define LED_R 9
-#define LED_G 6
-#define LED_B 5
-#define BTN_PIN 4
 
-#define BL_PIN 10     // пин подсветки дисплея
-#define PHOTO_PIN 0   // пин фоторезистора
+#define LED_R D4
+#define LED_G D7
+#define LED_B D8
 
+
+#define WIFI_SSID "Slavyanka"
+#define WIFI_PASS  "Ozzy1948"
+
+#include <ESP8266WiFi.h>
+#include <WiFiUdp.h>
 // библиотеки
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
+
 
 #if (DISPLAY_TYPE == 1)
 LiquidCrystal_I2C lcd(DISPLAY_ADDR, 20, 4);
@@ -100,8 +77,8 @@ DateTime now;
 Adafruit_BME280 bme;
 
 #if (CO2_SENSOR == 1)
-#include <MHZ19_uart.h>
-MHZ19_uart mhz19;
+#include <MHZ19.h>
+MHZ19 mhz19;
 #endif
 
 #include <GyverTimer.h>
@@ -114,8 +91,11 @@ GTimer_ms plotTimer(240000);
 GTimer_ms predictTimer((long)10 * 60 * 1000);         // 10 минут
 GTimer_ms brightTimer(2000);
 
-#include "GyverButton.h"
-GButton button(BTN_PIN, LOW_PULL, NORM_OPEN);
+GTimer_ms ntpTimer(1 * 60 * 1000); // every min
+GTimer_ms wifiTimer(1 * 60 * 1000); // every min
+
+//#include "GyverButton.h"
+//GButton button(BTN_PIN, LOW_PULL, NORM_OPEN);
 
 int8_t hrs, mins, secs;
 byte mode = 0;
@@ -131,12 +111,24 @@ byte mode = 0;
   8 график углекислого за сутки
 */
 
+struct serialData {
+  float Temp;
+  byte Hum;
+  int32_t Pres;
+  int32_t CO2;
+};
+
+int dateTimeBufferOffset = 0;
+unsigned char dateTimeBuffer[sizeof(DateTime)];
+unsigned char dataBuffer[sizeof(serialData)];
+
 // переменные для вывода
 float dispTemp;
 byte dispHum;
 int dispPres;
 int dispCO2;
 int dispRain;
+serialData data;
 
 // массивы графиков
 int tempHour[15], tempDay[15];
@@ -444,17 +436,45 @@ void setLED(byte color) {
   }
 }
 
+unsigned int localPort = 2390;      // local port to listen for UDP packets
+
+IPAddress timeServerIP;
+const char* ntpServerName = "time.windows.com";
+
+const int NTP_PACKET_SIZE = 48; // NTP time stamp is in the first 48 bytes of the message
+
+byte packetBuffer[ NTP_PACKET_SIZE ]; //buffer to hold incoming and outgoing packets
+
+// A UDP instance to let us send and receive packets over UDP
+WiFiUDP udp;
+WiFiClient sender;
+
 void setup() {
+
   Serial.begin(9600);
+  Serial.println("Start device");
+
+    WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+  }
+
+  if (WiFi.getAutoConnect() != true)    //configuration will be saved into SDK flash area
+  {
+    WiFi.setAutoConnect(true);   //on power-on automatically connects to last used hwAP
+    WiFi.setAutoReconnect(true);    //automatically reconnects to hwAP in case it's disconnected
+  }
+  
+  
 
   pinMode(BACKLIGHT, OUTPUT);
-  pinMode(LED_COM, OUTPUT);
   pinMode(LED_R, OUTPUT);
   pinMode(LED_G, OUTPUT);
   pinMode(LED_B, OUTPUT);
   setLED(0);
 
-  digitalWrite(LED_COM, LED_MODE);
   analogWrite(BACKLIGHT, LCD_BRIGHT_MAX);
 
   lcd.init();
@@ -472,6 +492,13 @@ void setup() {
   Serial.print(F("MHZ-19... "));
   mhz19.begin(MHZ_TX, MHZ_RX);
   mhz19.setAutoCalibration(false);
+
+//  while (mhz19.isWarming())
+//  {
+//      Serial.print("MH-Z19 now warming up...  status:");
+//      Serial.println(mhz19.getStatus());
+//      delay(10000);
+//  }
   mhz19.getStatus();    // первый запрос, в любом случае возвращает -1
   delay(500);
   if (mhz19.getStatus() == 0) {
@@ -503,7 +530,7 @@ void setup() {
   lcd.print(F("BME280... "));
   Serial.print(F("BME280... "));
   delay(50);
-  if (bme.begin(&Wire)) {
+  if (bme.begin(BME_ADDR)) {
     lcd.print(F("OK"));
     Serial.println(F("OK"));
   } else {
@@ -516,18 +543,10 @@ void setup() {
   lcd.setCursor(0, 3);
   if (status) {
     lcd.print(F("All good"));
-    Serial.println(F("All good"));
+    Serial.print(F("All good"));
   } else {
     lcd.print(F("Check wires!"));
-    Serial.println(F("Check wires!"));
-  }
-  while (1) {
-    lcd.setCursor(14, 1);
-    lcd.print("P:    ");
-    lcd.setCursor(16, 1);
-    lcd.print(analogRead(PHOTO), 1);
-    Serial.println(analogRead(PHOTO));
-    delay(300);
+    Serial.print(F("Check wires!"));
   }
 #else
 
@@ -536,7 +555,7 @@ void setup() {
   mhz19.setAutoCalibration(false);
 #endif
   rtc.begin();
-  bme.begin(&Wire);
+  bme.begin(BME_ADDR);
 #endif
 
   bme.setSampling(Adafruit_BME280::MODE_FORCED,
@@ -544,9 +563,6 @@ void setup() {
                   Adafruit_BME280::SAMPLING_X1, // pressure
                   Adafruit_BME280::SAMPLING_X1, // humidity
                   Adafruit_BME280::FILTER_OFF   );
-
-  if (RESET_CLOCK || rtc.lostPower())
-    rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 
   now = rtc.now();
   secs = now.second();
@@ -570,13 +586,26 @@ void setup() {
 }
 
 void loop() {
+
+    if(wifiTimer.isReady()) {
+    if (WiFi.status() != WL_CONNECTED) {
+      WiFi.disconnect();
+      delay(500);
+      WiFi.begin(WIFI_SSID, WIFI_PASS);
+    }
+  }
+
+  if(ntpTimer.isReady()) {
+    sendNTPpacket(); // send an NTP packet to a time server
+  }
+  
   if (brightTimer.isReady()) checkBrightness(); // яркость
   if (sensorsTimer.isReady()) readSensors();    // читаем показания датчиков с периодом SENS_TIME
 
 #if (DISPLAY_TYPE == 1)
   if (clockTimer.isReady()) clockTick();        // два раза в секунду пересчитываем время и мигаем точками
   plotSensorsTick();                            // тут внутри несколько таймеров для пересчёта графиков (за час, за день и прогноз)
-  modesTick();                                  // тут ловим нажатия на кнопку и переключаем режимы
+//  modesTick();                                  // тут ловим нажатия на кнопку и переключаем режимы
   if (mode == 0) {                                  // в режиме "главного экрана"
     if (drawSensorsTimer.isReady()) drawSensors();  // обновляем показания датчиков на дисплее с периодом SENS_TIME
   } else {                                          // в любом из графиков
@@ -585,4 +614,5 @@ void loop() {
 #else
   if (drawSensorsTimer.isReady()) drawSensors();
 #endif
+
 }
