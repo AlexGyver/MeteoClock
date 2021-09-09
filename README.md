@@ -45,23 +45,23 @@
 ## Материалы и компоненты
 ### Ссылки оставлены на магазины, с которых я закупаюсь уже не один год
 Первые ссылки - в основном магазин Great Wall, вторые - WAVGAT. Покупая в одном магазине, вы экономите на доставке!
-- Arduino NANO http://ali.ski/t_9Ij  http://ali.ski/cB3eu
-- Сенсорный модуль http://ali.ski/IFKkYZ  http://ali.ski/aCDUb
-- BME280 (5V) http://ali.ski/Ajl2y  http://ali.ski/bLXot
-- MH-Z19 http://ali.ski/sBt2yZ  http://ali.ski/H88vfk
-- Дисплей 2004 i2c http://ali.ski/po8xV  http://ali.ski/gldFua
-- DS3231 http://ali.ski/6d7v7  http://ali.ski/cIpCv
-- Микро DS3231 http://ali.ski/HmiPE  (http://ali.ski/O_RIyj БЕЗ ИОНИСТОРА)
+- Arduino NANO https://ali.ski/TPR0i  https://ali.ski/OYRv2c
+- Сенсорный модуль https://ali.ski/k906I  https://ali.ski/JpYYt
+- BME280 (5V) https://ali.ski/WLoTap  https://ali.ski/mgmUqQ
+- MH-Z19 https://ali.ski/O3RQtO  https://ali.ski/dWJqr
+- Дисплей 2004 i2c https://ali.ski/1bC5Gg  https://ali.ski/CUaV62
+- DS3231 https://ali.ski/oBDKfK  https://ali.ski/l5oefK
+- Микро DS3231 https://ali.ski/qOTQHN  (https://ali.ski/nAxxu БЕЗ ИОНИСТОРА)
 
 Дополнительно:
-- Светодиод RGB (пачка) http://ali.ski/Jw5dW
-- RGB модуль (ему резистор НЕ НУЖЕН) http://ali.ski/MHuR9  http://ali.ski/VCKQy
-- Ещё модуль 1 светодиод http://ali.ski/cNjGt
-- Резисторы (220 R) http://ali.ski/c2_Ju
-- Проводочки http://ali.ski/aQpyr  http://ali.ski/NcIJqb
-- Корпус http://ali.ski/XxmknP
+- Светодиод RGB (пачка) https://ali.ski/TbduA
+- RGB модуль (ему резистор НЕ НУЖЕН) https://ali.ski/JboP3  https://ali.ski/PERjX
+- Ещё модуль 1 светодиод https://ali.ski/OyOAD
+- Резисторы (220 R) https://ali.ski/ULnnwp
+- Проводочки https://ali.ski/wOa6P  https://ali.ski/1MzeF8
+- Корпус https://ali.ski/GlLegW
 - Корпус (Чип и Дип) https://www.chipdip.ru/product/g909g
-- Микро USB модуль http://ali.ski/LEOka
+- Микро USB модуль https://ali.ski/2Udb6h
 
 ## Вам скорее всего пригодится
 * [Всё для пайки (паяльники и примочки)](http://alexgyver.ru/all-for-soldering/)
