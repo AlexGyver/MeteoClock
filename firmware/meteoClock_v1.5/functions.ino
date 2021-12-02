@@ -1,5 +1,9 @@
 void checkBrightness() {
-  if (analogRead(PHOTO) < BRIGHT_THRESHOLD) {   // если темно
+
+  now = rtc.now();
+  hrs = now.hour();
+  
+  if (hrs >= 22 || hrs < 7) {// если темно
     analogWrite(BACKLIGHT, LCD_BRIGHT_MIN);
 #if (LED_MODE == 0)
     LED_ON = (LED_BRIGHT_MIN);
@@ -19,38 +23,7 @@ void checkBrightness() {
   else if (dispCO2 >= 1200) setLED(1);
 }
 
-void modesTick() {
-  button.tick();
-  boolean changeFlag = false;
-  if (button.isClick()) {
-    mode++;
 
-#if (CO2_SENSOR == 1)
-    if (mode > 8) mode = 0;
-#else
-    if (mode > 6) mode = 0;
-#endif
-    changeFlag = true;
-  }
-  if (button.isHolded()) {
-    mode = 0;
-    changeFlag = true;
-  }
-
-  if (changeFlag) {
-    if (mode == 0) {
-      lcd.clear();
-      loadClock();
-      drawClock(hrs, mins, 0, 0, 1);
-      if (DISPLAY_TYPE == 1) drawData();
-      drawSensors();
-    } else {
-      lcd.clear();
-      loadPlot();
-      redrawPlot();
-    }
-  }
-}
 
 void redrawPlot() {
   lcd.clear();
@@ -80,12 +53,15 @@ void readSensors() {
   dispHum = bme.readHumidity();
   dispPres = (float)bme.readPressure() * 0.00750062;
 #if (CO2_SENSOR == 1)
-  dispCO2 = mhz19.getPPM();
+measurement_t stat = mhz19.getMeasurement();
+  dispCO2 = stat.co2_ppm;
 
   if (dispCO2 < 800) setLED(2);
   else if (dispCO2 < 1200) setLED(3);
   else if (dispCO2 >= 1200) setLED(1);
 #endif
+
+sendDataToDweet(dispTemp, dispHum, dispPres, dispCO2);
 }
 
 void drawSensors() {
@@ -125,6 +101,7 @@ void drawSensors() {
   lcd.print(String(dispPres) + " mm  rain ");
   lcd.print(String(dispRain) + "% ");
 #endif
+  
 }
 
 void plotSensorsTick() {
@@ -238,4 +215,74 @@ void clockTick() {
     if (dotFlag) setLED(1);
     else setLED(0);
   }
+}
+
+// send an NTP request to the time server at the given address
+void sendNTPpacket() {
+  //get a random server from the pool
+  WiFi.hostByName(ntpServerName, timeServerIP);
+    
+  Serial.println("sending NTP packet...");
+  udp.begin(localPort);
+  // set all bytes in the buffer to 0
+  memset(packetBuffer, 0, NTP_PACKET_SIZE);
+  // Initialize values needed to form NTP request
+  // (see URL above for details on the packets)
+  packetBuffer[0] = 0b11100011;   // LI, Version, Mode
+  packetBuffer[1] = 0;     // Stratum, or type of clock
+  packetBuffer[2] = 6;     // Polling Interval
+  packetBuffer[3] = 0xEC;  // Peer Clock Precision
+  // 8 bytes of zero for Root Delay & Root Dispersion
+  packetBuffer[12]  = 49;
+  packetBuffer[13]  = 0x4E;
+  packetBuffer[14]  = 49;
+  packetBuffer[15]  = 52;
+
+  // all NTP fields have been given values, now
+  // you can send a packet requesting a timestamp:
+  udp.beginPacket(timeServerIP, 123); //NTP requests are to port 123
+  udp.write(packetBuffer, NTP_PACKET_SIZE);
+  udp.endPacket();
+
+  delay(500);
+  int cnt = 0;
+  while (cnt < 5) {
+    if (udp.parsePacket()) {
+      // We've received a packet, read the data from it
+      Serial.println("Receive packet");
+      udp.read(packetBuffer, NTP_PACKET_SIZE); // read the packet into the buffer
+  
+      unsigned long highWord = word(packetBuffer[40], packetBuffer[41]);
+      unsigned long lowWord = word(packetBuffer[42], packetBuffer[43]);
+      unsigned long secsSince1900 = highWord << 16 | lowWord;
+  
+      const unsigned long seventyYears = 2208988800UL;
+      uint32_t epoch = secsSince1900 - seventyYears;
+  
+      epoch += 3*3600;// UTC+3 Europe/Moscow
+      rtc.adjust(DateTime(epoch));
+      break;
+    }
+
+    cnt++;
+    delay(500);
+  }
+}
+
+void sendDataToDweet(float temp, byte hum, int32_t pres, int32_t co2) {
+    if (sender.connect("85.119.144.96", 80)) {
+      String data = "Temp=" + String(temp);
+      data += "&Humidity=" + String(hum);
+      data += "&Pressure=" + String(pres);
+      data += "&CO2=" + String(co2);
+      
+      String head = "POST /meteo/ HTTP/1.0\r\n";
+      head += "Host: 85.119.144.96\r\n";
+      head += "Content-Type: application/x-www-form-urlencoded\r\n";
+      head += "Content-Length: " + String(data.length()) + "\r\n";
+      head += "\r\n" + data;
+      
+      sender.print(head.c_str());
+      sender.stop();
+    }
 }
